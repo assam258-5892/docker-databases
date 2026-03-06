@@ -1,0 +1,126 @@
+services:
+  hadoop-service:
+    # docker compose exec -it hadoop-service bash
+    # docker compose exec -it hadoop-service hdfs dfs -ls hdfs://localhost/
+    # docker compose exec -it hadoop-service beeline -u jdbc:hive2://localhost:10000/
+    # jdbc:hive2://localhost:10000/ /
+    build:
+      context: Dockerfile/hadoop
+    image: hadoop
+    container_name: datalake-docker-hadoop
+    hostname: hadoop
+    volumes:
+      - ./etc/hadoop/hadoop-env.sh:/home/hadoop/hadoop/etc/hadoop/hadoop-env.sh:ro
+      - ./etc/hadoop/core-site.xml:/home/hadoop/hadoop/etc/hadoop/core-site.xml:ro
+      - ./etc/hadoop/hdfs-site.xml:/home/hadoop/hadoop/etc/hadoop/hdfs-site.xml:ro
+      - ./etc/hive/hive-site.xml:/home/hadoop/hive/conf/hive-site.xml:ro
+    ports:
+      - "8020:8020"
+      - "10000:10000"
+      - "50010:50010"
+  oracle-service:
+    # docker compose exec -it oracle-service bash
+    # docker compose exec -it oracle-service sqlplus / as sysdba
+    # jdbc:oracle:thin:@localhost:1521:FREE system/manager
+    image: container-registry.oracle.com/database/free:23.26.1.0  # docker login container-registry.oracle.com
+    container_name: datalake-docker-oracle
+    hostname: oracle
+    mem_limit: 2g
+    environment:
+      ORACLE_PWD: "manager"
+    volumes:
+      - oracle:/opt/oracle/oradata
+    ports:
+      - "1521:1521"
+  postgres-service:
+    # docker compose exec -it postgres-service bash
+    # docker compose exec -it postgres-service psql -U postgres
+    # jdbc:postgresql://localhost:5432/postgres postgres/
+    image: postgres:18
+    container_name: datalake-docker-postgres
+    hostname: postgres
+    command: postgres -c shared_buffers=128MB
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    volumes:
+      - postgres:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+  mariadb-service:
+    # docker compose exec -it mariadb-service bash
+    # docker compose exec -it mariadb-service mariadb mysql
+    # jdbc:mariadb://localhost:3306/mysql root/
+    image: mariadb:11.8
+    container_name: datalake-docker-mariadb
+    hostname: mariadb
+    command: mariadbd --innodb-buffer-pool-size=128M --bulk_insert_buffer_size=8M
+    environment:
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
+    volumes:
+      - mariadb:/var/lib/mysql
+    ports:
+      - "3306:3306"
+  mysql-service:
+    # docker compose exec -it mysql-service bash
+    # docker compose exec -it mysql-service mysql
+    # jdbc:mysql://localhost:3307/mysql root/
+    image: mysql:8.4
+    container_name: datalake-docker-mysql
+    hostname: mysql
+    command: mysqld --innodb-buffer-pool-size=128M --bulk_insert_buffer_size=8M
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - mysql:/var/lib/mysql
+    ports:
+      - "3307:3306"
+  cubrid-service:
+    # docker compose exec -it cubrid-service bash
+    # docker compose exec -it cubrid-service csql cubrid
+    # jdbc:CUBRID:localhost:33000:cubrid:::
+    image: cubrid/cubrid:11.4
+    container_name: datalake-docker-cubrid
+    hostname: cubrid
+    environment:
+      CUBRID_DB: "cubrid"
+      CUBRID_LOCALE: "ko_KR.utf8"
+    volumes:
+      - cubrid:/var/lib/cubrid
+      - cubrid-db:/home/cubrid/CUBRID/databases
+    ports:
+      - "33000:33000"
+  trino-service:
+    # docker compose exec -it trino-service trino
+    # jdbc:trino://localhost:8080/
+    image: trinodb/trino:471
+    container_name: datalake-docker-trino
+    hostname: trino
+    volumes:
+      - ./etc/trino/config.properties:/etc/trino/config.properties:ro
+      - ./etc/trino/jvm.config:/etc/trino/jvm.config:ro
+      - ./etc/trino/node.properties:/etc/trino/node.properties:ro
+    ports:
+      - "8080:8080"
+  elasticsearch-service:
+    # docker compose exec -it elasticsearch-service bash
+    # docker compose exec -it elasticsearch-service curl -XGET http://localhost:9200
+    # jdbc:es://localhost:9200/
+    image: elasticsearch:8.17.0
+    container_name: datalake-docker-elasticsearch
+    hostname: elasticsearch
+    environment:
+      discovery.type: "single-node"
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx1024m"
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+volumes:
+  oracle:
+  postgres:
+  mariadb:
+  mysql:
+  cubrid:
+  cubrid-db:
+  elasticsearch:

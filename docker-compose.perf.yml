@@ -1,0 +1,25 @@
+services:
+  hadoop-service:
+    volumes:
+      - ./etc/hadoop/hadoop-env.perf.sh:/home/hadoop/hadoop/etc/hadoop/hadoop-env.sh:ro
+      - ./etc/hadoop/core-site.xml:/home/hadoop/hadoop/etc/hadoop/core-site.xml:ro
+      - ./etc/hadoop/hdfs-site.xml:/home/hadoop/hadoop/etc/hadoop/hdfs-site.xml:ro
+      - ./etc/hive/hive-site.xml:/home/hadoop/hive/conf/hive-site.xml:ro
+  oracle-service:
+    mem_limit: 4g
+  postgres-service:
+    command: postgres -c shared_buffers=1GB
+  mariadb-service:
+    command: mariadbd --innodb-buffer-pool-size=1G --bulk_insert_buffer_size=256M
+  mysql-service:
+    command: mysqld --innodb-buffer-pool-size=1G --bulk_insert_buffer_size=256M
+  trino-service:
+    volumes:
+      - ./etc/trino/config.properties:/etc/trino/config.properties:ro
+      - ./etc/trino/jvm.perf.config:/etc/trino/jvm.config:ro
+      - ./etc/trino/node.properties:/etc/trino/node.properties:ro
+  elasticsearch-service:
+    environment:
+      discovery.type: "single-node"
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms1024m -Xmx2048m"
