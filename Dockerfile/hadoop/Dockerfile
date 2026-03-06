@@ -35,6 +35,9 @@ RUN ["sh", "-c", "cat package/apache-hive-2.3.7-bin.tar.gz.[123] | tar xzf -"]
 RUN ["mv", "hadoop-2.9.2", "hadoop"]
 RUN ["mv", "apache-hive-2.3.7-bin", "hive"]
 RUN ["cp", "package/postgresql-42.5.0.jar", "hive/lib"]
+RUN ["cp", "package/mariadb-java-client-3.5.3.jar", "hive/lib"]
+RUN ["cp", "package/mysql-connector-j-8.4.0.jar", "hive/lib"]
+RUN ["cp", "package/JDBC-11.3.1.0050-cubrid.jar", "hive/lib"]
 
 ENV JAVA_HOME       /usr/lib/jvm/java-8-openjdk-${TARGETARCH}
 ENV POSTGRESQL_HOME /usr/lib/postgresql/14

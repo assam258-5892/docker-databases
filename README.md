@@ -19,7 +19,7 @@ docker compose down -v       # Stop and remove containers and volumes (data)
 
 | Service | Version | Port | Client |
 |---------|---------|-----:|--------|
-| Oracle | 23c FREE | 1521 | `sqlplus / as sysdba` |
+| Oracle | 23ai FREE | 1521 | `sqlplus / as sysdba` |
 | PostgreSQL | 18 | 5432 | `psql -U postgres` |
 | MariaDB | 11.8 | 3306 | `mariadb mysql` |
 | MySQL | 8.4 | 3307 | `mysql` |
@@ -113,7 +113,29 @@ Memory usage can be adjusted per service. See the Location column for where to c
 To apply all performance settings at once, use `docker-compose.perf.yml` as an override:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.perf.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.perf.yml up -d --build
+```
+
+## Hadoop JDBC Drivers
+
+The Hadoop container includes JDBC drivers in `hive/lib` for connection tests via `beeline`.
+
+| Driver | Included in Build |
+|--------|:-----------------:|
+| PostgreSQL (`postgresql-42.5.0.jar`) | O |
+| MariaDB (`mariadb-java-client-3.5.3.jar`) | O |
+| MySQL (`mysql-connector-j-8.4.0.jar`) | O |
+| CUBRID (`JDBC-11.3.1.0050-cubrid.jar`) | O |
+| Oracle (`ojdbc8.jar`) | X (license) |
+
+Trino and Elasticsearch JDBC drivers require Java 11+, which is incompatible with the Hadoop container (Java 8).
+
+Oracle JDBC driver (`ojdbc8.jar`) is excluded from the build due to licensing restrictions. After starting all containers, copy it directly:
+
+```bash
+docker cp datalake-docker-oracle:/opt/oracle/product/26ai/dbhomeFree/jdbc/lib/ojdbc8.jar ojdbc8.jar
+docker cp ojdbc8.jar datalake-docker-hadoop:/home/hadoop/hive/lib/ojdbc8.jar
+rm ojdbc8.jar
 ```
 
 ## Notes
