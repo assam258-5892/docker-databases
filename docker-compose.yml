@@ -79,6 +79,7 @@ services:
     # docker compose exec -it cubrid-service csql cubrid
     # jdbc:CUBRID:localhost:33000:cubrid:::
     image: cubrid/cubrid:11.4
+    platform: linux/amd64
     container_name: datalake-docker-cubrid
     hostname: cubrid
     environment:
