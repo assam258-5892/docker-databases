@@ -30,6 +30,7 @@ services:
       ORACLE_PWD: "manager"
     volumes:
       - oracle:/opt/oracle/oradata
+      - ./sql:/sql:ro
     ports:
       - "1521:1521"
   postgres-service:
@@ -39,11 +40,12 @@ services:
     image: postgres:18
     container_name: datalake-docker-postgres
     hostname: postgres
-    command: postgres -c shared_buffers=128MB
+    command: postgres -c shared_buffers=128MB -c wal_level=logical
     environment:
       POSTGRES_HOST_AUTH_METHOD: "trust"
     volumes:
       - postgres:/var/lib/postgresql
+      - ./sql:/sql:ro
     ports:
       - "5432:5432"
   mariadb-service:
@@ -53,11 +55,12 @@ services:
     image: mariadb:11.8
     container_name: datalake-docker-mariadb
     hostname: mariadb
-    command: mariadbd --innodb-buffer-pool-size=128M --bulk_insert_buffer_size=8M
+    command: mariadbd --innodb-buffer-pool-size=128M --bulk_insert_buffer_size=8M --log-bin --binlog-format=ROW --server-id=1
     environment:
       MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
     volumes:
       - mariadb:/var/lib/mysql
+      - ./sql:/sql:ro
     ports:
       - "3306:3306"
   mysql-service:
@@ -67,11 +70,12 @@ services:
     image: mysql:8.4
     container_name: datalake-docker-mysql
     hostname: mysql
-    command: mysqld --innodb-buffer-pool-size=128M --bulk_insert_buffer_size=8M
+    command: mysqld --innodb-buffer-pool-size=128M --bulk_insert_buffer_size=8M --server-id=2
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     volumes:
       - mysql:/var/lib/mysql
+      - ./sql:/sql:ro
     ports:
       - "3307:3306"
   cubrid-service:
@@ -117,6 +121,70 @@ services:
       - elasticsearch:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
+  zookeeper-service:
+    image: confluentinc/cp-zookeeper:7.9.0
+    container_name: datalake-docker-zookeeper
+    hostname: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
+    ports:
+      - "2181:2181"
+  kafka-service:
+    # docker compose exec -it kafka-service bash
+    # kafka-topics --bootstrap-server localhost:9092 --list
+    # kafka-console-consumer --bootstrap-server localhost:9092 --topic <topic> --from-beginning
+    image: confluentinc/cp-kafka:7.9.0
+    container_name: datalake-docker-kafka
+    hostname: kafka
+    depends_on:
+      - zookeeper-service
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka:/var/lib/kafka/data
+    ports:
+      - "9092:9092"
+  debezium-service:
+    # http://localhost:8083/connectors
+    # http://localhost:8083/connector-plugins
+    image: debezium/connect:3.0.0.Final
+    container_name: datalake-docker-debezium
+    hostname: debezium
+    depends_on:
+      - kafka-service
+      - zookeeper-service
+    environment:
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: debezium_configs
+      OFFSET_STORAGE_TOPIC: debezium_offsets
+      STATUS_STORAGE_TOPIC: debezium_statuses
+      BOOTSTRAP_SERVERS: kafka:29092
+    ports:
+      - "8083:8083"
+  kafka-ui-service:
+    # http://localhost:9091
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: datalake-docker-kafka-ui
+    hostname: kafka-ui
+    depends_on:
+      - kafka-service
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: debezium
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://debezium:8083
+    ports:
+      - "9091:8080"
 volumes:
   oracle:
   postgres:
@@ -125,3 +193,6 @@ volumes:
   cubrid:
   cubrid-db:
   elasticsearch:
+  zookeeper-data:
+  zookeeper-log:
+  kafka:

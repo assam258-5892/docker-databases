@@ -8,11 +8,11 @@ services:
   oracle-service:
     mem_limit: 4g
   postgres-service:
-    command: postgres -c shared_buffers=1GB
+    command: postgres -c shared_buffers=1GB -c wal_level=logical
   mariadb-service:
-    command: mariadbd --innodb-buffer-pool-size=1G --bulk_insert_buffer_size=256M
+    command: mariadbd --innodb-buffer-pool-size=1G --bulk_insert_buffer_size=256M --log-bin --binlog-format=ROW --server-id=1
   mysql-service:
-    command: mysqld --innodb-buffer-pool-size=1G --bulk_insert_buffer_size=256M
+    command: mysqld --innodb-buffer-pool-size=1G --bulk_insert_buffer_size=256M --server-id=2
   trino-service:
     volumes:
       - ./etc/trino/config.properties:/etc/trino/config.properties:ro

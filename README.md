@@ -38,6 +38,12 @@ docker compose down -v       # Stop and remove containers and volumes (data)
 | Service | Version | Port | Purpose |
 |---------|---------|-----:|---------|
 | Hadoop | - | 8020, 50010 | HDFS |
+| Zookeeper | 7.9.0 | 2181 | Kafka metadata |
+| Kafka | 7.9.0 | 9092 | Message broker |
+| Debezium | 3.0.0 | 8083 | CDC (Kafka Connect) |
+| Kafka UI | 0.7.2 | 9091 | Kafka web UI |
+
+For Debezium CDC setup and connector configuration, see [debezium.md](debezium.md).
 
 ## JDBC Connection
 
