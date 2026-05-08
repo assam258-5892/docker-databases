@@ -131,6 +131,7 @@ services:
     volumes:
       - zookeeper-data:/var/lib/zookeeper/data
       - zookeeper-log:/var/lib/zookeeper/log
+      - zookeeper-secrets:/etc/zookeeper/secrets
     ports:
       - "2181:2181"
   kafka-service:
@@ -151,6 +152,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     volumes:
       - kafka:/var/lib/kafka/data
+      - kafka-secrets:/etc/kafka/secrets
     ports:
       - "9092:9092"
   debezium-service:
@@ -168,6 +170,10 @@ services:
       OFFSET_STORAGE_TOPIC: debezium_offsets
       STATUS_STORAGE_TOPIC: debezium_statuses
       BOOTSTRAP_SERVERS: kafka:29092
+    volumes:
+      - debezium-config:/kafka/config
+      - debezium-data:/kafka/data
+      - debezium-logs:/kafka/logs
     ports:
       - "8083:8083"
   kafka-ui-service:
@@ -195,4 +201,9 @@ volumes:
   elasticsearch:
   zookeeper-data:
   zookeeper-log:
+  zookeeper-secrets:
   kafka:
+  kafka-secrets:
+  debezium-config:
+  debezium-data:
+  debezium-logs:
