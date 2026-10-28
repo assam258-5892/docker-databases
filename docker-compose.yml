@@ -22,7 +22,7 @@ services:
     # docker compose exec -it oracle-service bash
     # docker compose exec -it oracle-service sqlplus / as sysdba
     # jdbc:oracle:thin:@localhost:1521:FREE system/manager
-    image: container-registry.oracle.com/database/free:23.26.1.0  # docker login container-registry.oracle.com
+    image: container-registry.oracle.com/database/free:23.26.3.0  # docker login container-registry.oracle.com
     container_name: datalake-docker-oracle
     hostname: oracle
     mem_limit: 2g
@@ -93,7 +93,7 @@ services:
   trino-service:
     # docker compose exec -it trino-service trino
     # jdbc:trino://localhost:8080/
-    image: trinodb/trino:471
+    image: trinodb/trino:484
     container_name: datalake-docker-trino
     hostname: trino
     volumes:
@@ -106,7 +106,7 @@ services:
 #     # docker compose exec -it elasticsearch-service bash
 #     # docker compose exec -it elasticsearch-service curl -XGET http://localhost:9200
 #     # jdbc:es://localhost:9200/
-#     image: elasticsearch:8.17.0
+#     image: elasticsearch:8.19.23
 #     container_name: datalake-docker-elasticsearch
 #     hostname: elasticsearch
 #     environment:
